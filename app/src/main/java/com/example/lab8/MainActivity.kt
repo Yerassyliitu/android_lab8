@@ -1,53 +1,90 @@
 package com.example.lab8
 
-import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.view.View
+import android.os.Bundle
+import android.widget.Button
 import android.widget.EditText
-
+import android.widget.TextView
 
 class MainActivity : AppCompatActivity() {
     private lateinit var randomCharacterEditText: EditText
-    private lateinit var serviceIntent: Intent
     private lateinit var broadcastReceiver: BroadcastReceiver
+    private lateinit var bgServiceIntent: Intent
+    private lateinit var fgServiceIntent: Intent
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Инициализация компонентов для Background Service
         randomCharacterEditText = findViewById(R.id.editText_randomCharacter)
-        serviceIntent = Intent(this, RandomCharacterService::class.java)
+        val startBgButton: Button = findViewById(R.id.button_start_bg)
+        val stopBgButton: Button = findViewById(R.id.button_stop_bg)
 
-        broadcastReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                val char = intent?.getCharExtra("randomCharacter", '?')
-                randomCharacterEditText.setText(char.toString())
-            }
+        // Инициализация компонентов для Foreground Service
+        val startFgButton: Button = findViewById(R.id.button_start_fg)
+        val stopFgButton: Button = findViewById(R.id.button_stop_fg)
+        val nextActivityButton: Button = findViewById(R.id.button_next_activity)
+
+        // Создание Broadcast Receiver для Background Service
+        broadcastReceiver = MyBroadcastReceiver()
+
+        // Инициализация Intent для обоих сервисов
+        bgServiceIntent = Intent(this, RandomCharacterService::class.java)
+        fgServiceIntent = Intent(applicationContext, MusicService::class.java)
+
+        // Настройка обработчиков кнопок для Background Service
+        startBgButton.setOnClickListener {
+            startService(bgServiceIntent)
         }
-    }
 
-    fun onClick(view: View) {
-        when (view.id) {
-            R.id.button_start -> startService(serviceIntent)
-            R.id.button_end -> {
-                stopService(serviceIntent)
-                randomCharacterEditText.setText("")
-            }
+        stopBgButton.setOnClickListener {
+            stopService(bgServiceIntent)
+            randomCharacterEditText.setText("")
+        }
+
+        // Настройка обработчиков кнопок для Foreground Service
+        startFgButton.setOnClickListener {
+            ContextCompat.startForegroundService(this, fgServiceIntent)
+        }
+
+        stopFgButton.setOnClickListener {
+            stopService(fgServiceIntent)
+        }
+
+        // Кнопка для перехода на вторую активность
+        nextActivityButton.setOnClickListener {
+            startActivity(Intent(this, MainActivity2::class.java))
         }
     }
 
     override fun onStart() {
         super.onStart()
-        val intentFilter = IntentFilter("my.custom.action.tag.lab6")
-        registerReceiver(broadcastReceiver, intentFilter)
+        val intentFilter = IntentFilter()
+        intentFilter.addAction("my.custom.action.tag.lab6")
+        registerReceiver(broadcastReceiver, intentFilter, RECEIVER_NOT_EXPORTED)
     }
 
     override fun onStop() {
         super.onStop()
         unregisterReceiver(broadcastReceiver)
+    }
+
+    inner class MyBroadcastReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            try {
+                val data = intent.getCharExtra("randomCharacter", '?')
+                runOnUiThread {
+                    randomCharacterEditText.setText(data.toString())
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 }
