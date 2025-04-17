@@ -1,5 +1,5 @@
 package com.example.lab8
-
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import android.content.BroadcastReceiver
@@ -9,7 +9,6 @@ import android.content.IntentFilter
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
-import android.widget.TextView
 
 class MainActivity : AppCompatActivity() {
     private lateinit var randomCharacterEditText: EditText
@@ -29,7 +28,6 @@ class MainActivity : AppCompatActivity() {
         // Инициализация компонентов для Foreground Service
         val startFgButton: Button = findViewById(R.id.button_start_fg)
         val stopFgButton: Button = findViewById(R.id.button_stop_fg)
-        val nextActivityButton: Button = findViewById(R.id.button_next_activity)
 
         // Создание Broadcast Receiver для Background Service
         broadcastReceiver = MyBroadcastReceiver()
@@ -56,18 +54,16 @@ class MainActivity : AppCompatActivity() {
         stopFgButton.setOnClickListener {
             stopService(fgServiceIntent)
         }
-
-        // Кнопка для перехода на вторую активность
-        nextActivityButton.setOnClickListener {
-            startActivity(Intent(this, MainActivity2::class.java))
-        }
     }
 
     override fun onStart() {
         super.onStart()
         val intentFilter = IntentFilter()
         intentFilter.addAction("my.custom.action.tag.lab6")
-        registerReceiver(broadcastReceiver, intentFilter, RECEIVER_NOT_EXPORTED)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(broadcastReceiver, intentFilter, RECEIVER_NOT_EXPORTED)
+        }
     }
 
     override fun onStop() {

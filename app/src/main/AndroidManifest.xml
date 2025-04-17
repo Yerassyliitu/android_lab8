@@ -20,12 +20,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".MainActivity2"
-            android:exported="false" />
 
         <service android:name=".RandomCharacterService" />
-        <service android:name=".MusicService" android:foregroundServiceType="mediaPlayback"
+        <service android:name=".MusicService" android:enabled="true" android:foregroundServiceType="mediaPlayback"
             tools:ignore="ForegroundServicePermission" />
 
     </application>
